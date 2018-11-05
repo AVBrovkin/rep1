@@ -5,11 +5,11 @@ import tensorflow as tf
 
 slim = tf.contrib.slim
 
-_BATCH_NORM_DECAY = 0.9
-_BATCH_NORM_EPSILON = 1e-05
-_LEAKY_RELU = 0.1
+BATCH_NORM_DECAY = 0.9
+BATCH_NORM_EPSILON = 1e-05
+LEAKY_RELU = 0.1
 
-_ANCHORS = [(10, 13), (16, 30), (33, 23),
+ANCHORS = [(10, 13), (16, 30), (33, 23),
             (30, 61), (62, 45), (59, 119),
             (116, 90), (156, 198), (373, 326)]
 
@@ -211,8 +211,8 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
 
     # set batch norm params
     batch_norm_params = {
-        'decay': _BATCH_NORM_DECAY,
-        'epsilon': _BATCH_NORM_EPSILON,
+        'decay': BATCH_NORM_DECAY,
+        'epsilon': BATCH_NORM_EPSILON,
         'scale': True,
         'is_training': is_training,
         'fused': None,  # Use fused batch norm if possible.
@@ -223,14 +223,14 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
         with slim.arg_scope([slim.conv2d], normalizer_fn=slim.batch_norm,
                             normalizer_params=batch_norm_params,
                             biases_initializer=None,
-                            activation_fn=lambda x: tf.nn.leaky_relu(x, alpha=_LEAKY_RELU)):
+                            activation_fn=lambda x: tf.nn.leaky_relu(x, alpha=LEAKY_RELU)):
             with tf.variable_scope('darknet-53'):
                 route_1, route_2, inputs = darknet53(inputs)
 
             with tf.variable_scope('yolo-v3'):
                 route, inputs = _yolo_block(inputs, 512)
                 detect_1 = _detection_layer(
-                    inputs, num_classes, _ANCHORS[6:9], img_size, data_format)
+                    inputs, num_classes, ANCHORS[6:9], img_size, data_format)
                 detect_1 = tf.identity(detect_1, name='detect_1')
 
                 inputs = _conv2d_fixed_padding(route, 256, 1)
@@ -242,7 +242,7 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
                 route, inputs = _yolo_block(inputs, 256)
 
                 detect_2 = _detection_layer(
-                    inputs, num_classes, _ANCHORS[3:6], img_size, data_format)
+                    inputs, num_classes, ANCHORS[3:6], img_size, data_format)
                 detect_2 = tf.identity(detect_2, name='detect_2')
 
                 inputs = _conv2d_fixed_padding(route, 128, 1)
@@ -254,7 +254,7 @@ def yolo_v3(inputs, num_classes, is_training=False, data_format='NCHW', reuse=Fa
                 _, inputs = _yolo_block(inputs, 128)
 
                 detect_3 = _detection_layer(
-                    inputs, num_classes, _ANCHORS[0:3], img_size, data_format)
+                    inputs, num_classes, ANCHORS[0:3], img_size, data_format)
                 detect_3 = tf.identity(detect_3, name='detect_3')
 
                 detections = tf.concat([detect_1, detect_2, detect_3], axis=1)
